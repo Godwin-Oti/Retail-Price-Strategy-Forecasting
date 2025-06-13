@@ -8,8 +8,8 @@ import joblib  # For loading your trained model
 import numpy as np
 
 # Load data & model
-df = pd.read_csv("your_cleaned_data.csv")  # Replace with actual data path
-model = joblib.load("your_trained_model.pkl")  # Replace with actual model
+df = pd.read_csv("processed_retail_data.csv")  
+model = joblib.load("sales_model.pkl")  # Replace with actual model
 
 # Title
 st.title("📊 Sales Prediction Dashboard")
