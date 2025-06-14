@@ -9,7 +9,7 @@ import numpy as np
 
 # Load data & model
 df = pd.read_csv("processed_retail_data.csv")  
-model = joblib.load("sales_model.pkl")  # Replace with actual model
+model = joblib.load("sales_pipeline.pkl")  # Replace with actual model
 
 # Title
 st.title("📊 Sales Prediction Dashboard")
