@@ -3,7 +3,8 @@ import pandas as pd
 import joblib
 import shap
 from sklearn.pipeline import Pipeline
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+import plotly.express as px
 
 # --- Load Data & Model ---
 df = pd.read_csv("processed_retail_data.csv")
@@ -27,7 +28,6 @@ selected_month = st.sidebar.selectbox("Month", sorted(available_months))
 # --- Sidebar: Simulation Controls ---
 st.sidebar.header("⚙️ Adjust Simulation Inputs")
 
-# Confirm column existence before accessing
 unit_price_col = 'unit_price' if 'unit_price' in df.columns else None
 freight_price_col = 'freight_price' if 'freight_price' in df.columns else None
 
@@ -66,7 +66,7 @@ else:
         prediction = model.predict(input_data)[0]
         st.metric("📈 Predicted Quantity Sold", f"{prediction:.2f}")
 
-        # --- SHAP Explanation ---
+        # --- SHAP Explanation with Plotly ---
         st.subheader("🔍 Feature Impact (SHAP Values)")
 
         def get_feature_names(pipeline):
@@ -99,18 +99,59 @@ else:
 
             return output_features
 
-        # Get preprocessed input and feature names
+        # Get SHAP values and feature names
         preprocessed_input = model.named_steps['preprocessor'].transform(input_data)
         feature_names = get_feature_names(model)
 
         explainer = shap.Explainer(model.named_steps['model'], feature_names=feature_names)
         shap_values = explainer(preprocessed_input)
 
-        # Plot SHAP with clean feature names
-        fig, ax = plt.subplots()
-        shap.plots.bar(shap_values[0], show=False)
-        st.pyplot(fig)
+        # Build dataframe for Plotly
+        shap_df = pd.DataFrame({
+            "Feature": feature_names,
+            "SHAP Value": shap_values[0].values
+        }).sort_values(by="SHAP Value", key=abs, ascending=True)
+
+        fig_shap = go.Figure(
+            go.Bar(
+                x=shap_df["SHAP Value"],
+                y=shap_df["Feature"],
+                orientation='h',
+                marker=dict(color=shap_df["SHAP Value"], colorscale="RdBu"),
+            )
+        )
+        fig_shap.update_layout(
+            title="Feature Contribution to Prediction",
+            xaxis_title="SHAP Value",
+            yaxis_title="Feature",
+            template="plotly_white",
+            height=500
+        )
+        st.plotly_chart(fig_shap, use_container_width=True)
 
         # --- Display Raw Input Used ---
         st.subheader("🔎 Model Input")
         st.write(input_data.reset_index(drop=True))
+
+        # --- Historical Sales Trend with Plotly ---
+        st.subheader("📉 Historical Sales Trend")
+
+        history_df = df[df["product_id"] == product_id].copy()
+        history_df["month_year"] = pd.to_datetime(
+            history_df["year"].astype(str) + "-" + history_df["month"].astype(str),
+            format="%Y-%m"
+        )
+        history_df = history_df.sort_values("month_year")
+
+        fig_trend = px.line(
+            history_df,
+            x="month_year",
+            y="total_quantity_sold",
+            markers=True,
+            title=f"Sales Trend for Product ID: {product_id}",
+            labels={"total_quantity_sold": "Quantity Sold", "month_year": "Month"}
+        )
+        selected_date = pd.to_datetime(f"{input_data['year'].values[0]}-{input_data['month'].values[0]}")
+        fig_trend.add_vline(x=selected_date, line_dash="dash", line_color="red")
+
+        st.plotly_chart(fig_trend, use_container_width=True)
