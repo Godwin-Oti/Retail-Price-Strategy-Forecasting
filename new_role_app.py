@@ -14,15 +14,10 @@ model = joblib.load("sales_pipeline.pkl")
 # --- Title ---
 st.title("📦 Sales Quantity Prediction Dashboard")
 
-# --- Sidebar: Product, Year & Month Selection ---
-st.sidebar.header("🔍 Select Product & Date")
+# --- Sidebar: Product & Month Selection ---
+st.sidebar.header("🔍 Select Product & Month")
 
 product_id = st.sidebar.selectbox("Product ID", df['product_id'].unique())
-
-# Year select (from min year in data to +5 years in future)
-min_year = int(df['year'].min())
-max_year = int(df['year'].max()) + 5
-year = st.sidebar.selectbox("Year", list(range(min_year, max_year + 1)))
 
 # Month select by name
 months = list(range(1,13))
@@ -49,61 +44,45 @@ freight_price = st.sidebar.slider(
 holiday_flag = st.sidebar.selectbox("Holiday", [0, 1])
 
 # --- Prepare Input for Prediction ---
-# Filter data for product/month/year
-lookup_df = df[(df['product_id'] == product_id) & (df['year'] == year) & (df['month'] == month)]
+# Filter data for product/month
+product_df = df[df['product_id'] == product_id]
+required_cols = ['product_category_name', 'month', 'month_index', 'lag_1', 'unit_price', 'freight_price', 'holiday']
 
-required_cols = ['product_category_name', 'month', 'year', 'month_index', 'lag_1', 'unit_price', 'freight_price', 'holiday']
+if product_df.empty:
+    st.error("No historical data for selected product to infer features.")
+    st.stop()
 
-if not lookup_df.empty:
-    # Use existing data for prediction
-    input_data = lookup_df[required_cols].copy()
-else:
-    # No data for this product/year/month (future prediction)
-    # Build input row manually
+# Use max available year-month for reference
+max_year = product_df['year'].max()
+max_month = product_df[product_df['year'] == max_year]['month'].max()
+max_month_index = product_df['month_index'].max()
 
-    # Get product_category_name from product_id (most common in data)
-    prod_cat = df[df['product_id'] == product_id]['product_category_name'].mode()
-    if prod_cat.empty:
-        st.error("Product category not found for selected product.")
-        st.stop()
-    product_category_name = prod_cat.values[0]
+# Calculate months difference
+months_diff = (month - max_month) if month >= max_month else (12 - max_month + month)
+month_index = max_month_index + months_diff
 
-    # Calculate month_index: use max month_index for product + difference in months from max date
-    product_df = df[df['product_id'] == product_id]
-    if product_df.empty:
-        st.error("No historical data for selected product to infer month_index.")
-        st.stop()
-    max_month_index = product_df['month_index'].max()
-    max_year_data = product_df['year'].max()
-    max_month_data = product_df[product_df['year'] == max_year_data]['month'].max()
+# Get lag_1 (previous month sales quantity)
+lag_1_row = product_df[(product_df['year'] == max_year) & (product_df['month'] == max_month)]
+lag_1 = lag_1_row['total_quantity_sold'].values[0] if not lag_1_row.empty else 0
 
-    # Calculate months difference between max known month and selected month
-    months_diff = (year - max_year_data) * 12 + (month - max_month_data)
-    month_index = max_month_index + months_diff
+# Get product_category_name
+prod_cat = product_df['product_category_name'].mode()
+if prod_cat.empty:
+    st.error("Product category not found for selected product.")
+    st.stop()
+product_category_name = prod_cat.values[0]
 
-    # Get lag_1 (previous month sales quantity) from last known month
-    lag_1_row = product_df[(product_df['year'] == max_year_data) & (product_df['month'] == max_month_data)]
-    if lag_1_row.empty:
-        lag_1 = 0  # fallback
-    else:
-        lag_1 = lag_1_row['total_quantity_sold'].values[0]
-
-    # Build input dataframe with one row
-    input_data = pd.DataFrame([{
-        'product_category_name': product_category_name,
-        'month': month,
-        'year': year,
-        'month_index': month_index,
-        'lag_1': lag_1,
-        'unit_price': unit_price,
-        'freight_price': freight_price,
-        'holiday': holiday_flag
-    }])
-
-# --- Apply simulated input overrides (if existing data was used)
-input_data['unit_price'] = unit_price
-input_data['freight_price'] = freight_price
-input_data['holiday'] = holiday_flag
+# Build input dataframe
+input_data = pd.DataFrame([{
+    'product_category_name': product_category_name,
+    'year': max_year,  # keep year hidden but included
+    'month': month,
+    'month_index': month_index,
+    'lag_1': lag_1,
+    'unit_price': unit_price,
+    'freight_price': freight_price,
+    'holiday': holiday_flag
+}])
 
 # --- Prediction ---
 prediction = model.predict(input_data)[0]
@@ -153,17 +132,10 @@ with tabs[1]:
         labels={"total_quantity_sold": "Quantity Sold", "month_year": "Month"}
     )
 
-    # Mark prediction month if in past data or future
-    try:
-        selected_date = pd.to_datetime(f"{year}-{month}")
-        fig_trend.add_vline(x=selected_date, line_dash="dash", line_color="red")
-    except:
-        pass
-
     st.plotly_chart(fig_trend, use_container_width=True)
 
     delta = prediction - input_data['lag_1'].values[0]
-    st.metric("📊 Change from Previous Month", f"{delta:+.2f}")
+    st.metric("📋 Change from Previous Month", f"{delta:+.2f}")
 
 # --- Marketing Tab ---
 with tabs[2]:
@@ -194,7 +166,7 @@ with tabs[4]:
 
 # --- Model Explanation (SHAP) ---
 with tabs[5]:
-    st.subheader("🧠 Model Explanation (SHAP Values)")
+    st.subheader("🧐 Model Explanation (SHAP Values)")
 
     def get_feature_names(pipeline):
         preprocessor = pipeline.named_steps["preprocessor"]
@@ -254,4 +226,4 @@ with tabs[5]:
     st.plotly_chart(fig_shap, use_container_width=True)
 
     st.subheader("🔎 Model Input")
-    st.write(input_data.reset_index(drop=True))
+    st.write(input_data.drop(columns=['year']).reset_index(drop=True))
