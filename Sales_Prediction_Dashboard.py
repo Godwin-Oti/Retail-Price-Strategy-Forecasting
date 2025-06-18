@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
 import joblib
 import shap
 from sklearn.pipeline import Pipeline
@@ -150,6 +151,8 @@ with tabs[0]:
 with tabs[1]:
     st.subheader("📈 Sales Execution Insights")
 
+
+
     # Filter data for the selected product
     product_sales = df_full[df_full["product_id"] == product_id].copy()
     product_sales["month_year"] = pd.to_datetime(product_sales["year"].astype(str) + "-" + product_sales["month"].astype(str))
@@ -180,26 +183,6 @@ with tabs[1]:
         st.plotly_chart(fig_cust_trend, use_container_width=True)
         st.caption("Monthly customer count trend for the selected product")
 
-    # Sales by Weekday vs Weekend
-    if {'year', 'month', 'day'}.issubset(df_full.columns):
-        product_sales["date"] = pd.to_datetime(product_sales[["year", "month", "day"]])
-        product_sales["weekday"] = product_sales["date"].dt.weekday
-        product_sales["is_weekend"] = product_sales["weekday"].apply(lambda x: 1 if x >= 5 else 0)
-        sales_weekday = product_sales.groupby("is_weekend")["qty"].sum().rename({0: "Weekday", 1: "Weekend"})
-        st.write("### 🕘 Sales by Weekday vs Weekend")
-        st.bar_chart(sales_weekday)
-        st.caption("Sales distribution between weekdays and weekends")
-
-    # Volume vs Unit Price Correlation Scatter Plot
-    fig_vol_price = px.scatter(
-        product_sales,
-        x="unit_price",
-        y="qty",
-        trendline="ols",
-        title="Volume vs Unit Price Correlation",
-        labels={"unit_price": "Unit Price", "qty": "Quantity Sold"}
-    )
-    st.plotly_chart(fig_vol_price, use_container_width=True)
 
     # Change from Previous Month Metric (Prediction vs Lag_1)
     delta = prediction - input_data['lag_1'].values[0]
