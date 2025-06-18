@@ -11,6 +11,10 @@ df_full = pd.read_csv("retail_price.csv")       # Full dataset for EDA/visuals
 df_model = pd.read_csv("processed_retail_data.csv")            # Dataset with features for model input
 model = joblib.load("sales_pipeline.pkl")
 
+# Compute month_index in df_full
+df_full["month_index"] = (df_full["year"] - df_full["year"].min()) * 12 + df_full["month"]
+
+
 # --- Title ---
 st.title("📦 Sales Quantity Prediction Dashboard")
 
@@ -181,7 +185,7 @@ with tabs[4]:
 
     vol_df = df_full[df_full['product_id'] == product_id].copy()
     fig_vol = px.line(vol_df, x="month_index", y="qty", title="Demand Over Time")
-    fig_vol.add_scatter(x=vol_df["month_index"], y=vol_df["lag_1"], mode="lines", name="Lag 1")
+    fig_vol.add_scatter(x=vol_df["month_index"], y=vol_df["lag_price"], mode="lines", name="Lag 1")
     st.plotly_chart(fig_vol, use_container_width=True)
 
 # --- Model Explanation (SHAP) ---
