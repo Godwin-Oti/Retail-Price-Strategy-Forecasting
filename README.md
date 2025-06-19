@@ -1,6 +1,6 @@
 ## 🧠 Project Title
 
-**Sales Forecasting & Executive Dashboard for Retail Products**
+**Sales Forecasting & Strategy Dashboard for Retail Products**
 
 ---
 
