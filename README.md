@@ -66,6 +66,21 @@ streamlit run Sales_Prediction_Dashboard.py
 
 ---
 
-## 📊 Business Relevance
+## 📊 Business Relevance & Impact
 
-This project simulates **real-world retail decision-making**. It gives non-technical users visibility into **how pricing and seasonality affect sales**, and empowers multiple business functions (Sales, Marketing, Finance, and Supply Chain) to collaborate using a **data-driven forecasting tool**.
+This project simulates *real-world retail decision-making* by providing an intuitive forecasting tool that visualizes how pricing strategies and seasonal factors influence sales performance. Designed for non-technical users, it enables cross-functional collaboration among *Sales, Marketing, Finance, and Supply Chain teams through a unified, data-driven platform*.
+
+*By leveraging this tool, retail analysts, planners, and category managers can:*
+
+- Make informed pricing decisions that maximize revenue
+
+- Understand the key drivers behind sales trends and performance
+
+- Align marketing initiatives with product attributes for better targeting
+
+- Improve supply chain responsiveness by anticipating demand fluctuations
+
+- Minimize waste and lost revenue through proactive inventory and sales planning
+
+Ultimately, this empowers businesses to operate more efficiently and competitively in dynamic retail markets.
+
