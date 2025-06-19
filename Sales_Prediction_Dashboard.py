@@ -16,7 +16,7 @@ model = joblib.load("sales_pipeline.pkl")
 df_full["month_index"] = (df_full["year"] - df_full["year"].min()) * 12 + df_full["month"]
 
 # --- Title ---
-st.title("📦 Sales Quantity Prediction Dashboard")
+st.title("📦 Retail Sales Prediction & Explainability Dashboard")
 
 # --- Sidebar: Product & Month Selection ---
 st.sidebar.header("🔍 Select Product & Month")
