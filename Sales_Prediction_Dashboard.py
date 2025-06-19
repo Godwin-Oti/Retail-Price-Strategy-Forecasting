@@ -384,3 +384,17 @@ with tabs[5]:
 
     st.subheader("🔎 Model Input")
     st.write(input_data.drop(columns=['year']).reset_index(drop=True))
+
+    st.markdown(
+        """
+        ### 📘 How to Interpret SHAP Values
+        SHAP (SHapley Additive exPlanations) shows how each feature contributed to the model's prediction.
+
+        - ➕ **Positive SHAP values**: Push the prediction **higher** (increase predicted sales).
+        - ➖ **Negative SHAP values**: Push the prediction **lower** (decrease predicted sales).
+        - The **magnitude** of the SHAP value shows how strongly a feature influenced the prediction.
+        - Features near the top of the chart had the **biggest impact** on this specific prediction.
+
+        This helps you understand **why** the model made a certain prediction, and what features are driving sales.
+        """
+    )
