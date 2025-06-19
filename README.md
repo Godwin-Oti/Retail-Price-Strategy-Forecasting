@@ -45,11 +45,11 @@ This project is an interactive Streamlit dashboard that forecasts product-level 
 
 ## 🧪 Tech Stack
 
-* **Frontend**: Streamlit
-* **Visualization**: Plotly, Matplotlib
-* **Modeling**: Scikit-learn pipeline (`sales_pipeline.pkl`)
-* **Explainability**: SHAP
-* **Data**: Pandas, CSV files
+* **Front-End**: Streamlit for interactive UI
+* **Back-End & Modeling**: Scikit-learn pipeline with preprocessing and regression (`sales_pipeline.pkl`)
+* **Data Visualization**: Plotly, Matplotlib
+* **ML Explainability**: SHAP
+* **Data**: Retail transaction data, including pricing, freight, product metadata, and sales quantity over time
 
 ---
 
